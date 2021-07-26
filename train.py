@@ -65,15 +65,22 @@ def train(opt):
         # Exploration or exploitation
         epsilon = opt.final_epsilon + (max(opt.num_decay_epochs - epoch, 0) * (
                 opt.initial_epsilon - opt.final_epsilon) / opt.num_decay_epochs)
+        print("### epsilon ###")
+        print(epsilon)
         u = random()
         random_action = u <= epsilon
         next_actions, next_states = zip(*next_steps.items())
         next_states = torch.stack(next_states)
+        print("### next states stack ###")
+        print(next_states)
+
         if torch.cuda.is_available():
             next_states = next_states.cuda()
         model.eval()
         with torch.no_grad():
             predictions = model(next_states)[:, 0]
+            print("### predictions ###")
+            print(predictions)
         model.train()
         if random_action:
             index = randint(0, len(next_steps) - 1)
@@ -81,7 +88,11 @@ def train(opt):
             index = torch.argmax(predictions).item()
 
         next_state = next_states[index, :]
+        print("### next_state ###")
+        print(next_state)
         action = next_actions[index]
+        print("### action ###")
+        print(action) # (position, rotation)
 
         reward, done = env.step(action, render=True)
 
@@ -101,6 +112,8 @@ def train(opt):
         if len(replay_memory) < opt.replay_memory_size / 10:
             continue
         epoch += 1
+        print("### epoch ###")
+        print(epoch)
         batch = sample(replay_memory, min(len(replay_memory), opt.batch_size))
         state_batch, reward_batch, next_state_batch, done_batch = zip(*batch)
         state_batch = torch.stack(tuple(state for state in state_batch))
@@ -113,9 +126,13 @@ def train(opt):
             next_state_batch = next_state_batch.cuda()
 
         q_values = model(state_batch)
+        print("### q_values ###")
+        print(q_values)
         model.eval()
         with torch.no_grad():
             next_prediction_batch = model(next_state_batch)
+            print("### next prediction batch ###")
+            print(next_prediction_batch)
         model.train()
 
         y_batch = torch.cat(
@@ -124,6 +141,8 @@ def train(opt):
 
         optimizer.zero_grad()
         loss = criterion(q_values, y_batch)
+        print("### loss ###")
+        print(loss)
         loss.backward()
         optimizer.step()
 

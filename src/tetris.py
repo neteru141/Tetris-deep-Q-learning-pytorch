@@ -127,6 +127,12 @@ class Tetris:
                     pos["y"] += 1
                 self.truncate(piece, pos)
                 board = self.store(piece, pos)
+                print("### piece ###")
+                print(piece)
+                print("### pos ###")
+                print(pos)
+                print("### board ###")
+                print(np.array(board))
                 states[(x, i)] = self.get_state_properties(board)
             curr_piece = self.rotate(curr_piece)
         return states
